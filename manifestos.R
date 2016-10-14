@@ -44,18 +44,20 @@ parties %>%
 
 raw_texts %>%
   mclapply(text_fingerprint, mc.cores = 8) %>%
-  bind_rows(.id = "party") -> party_fingerprints
+  bind_rows(.id = "party") %>%
+  left_join(data_frame(party = parties,
+                       partyname = c("Greens", "Left", "SocDem", "Liberals", "ChrDem", "AfD"))) -> party_fingerprints
 
-data_frame(party = parties,
-           partyname = c("Greens", "Left", "SocDem", "Liberals", "ChrDem", "AfD")) %>%
-  right_join(party_fingerprints) %>%
+write.csv(party_fingerprints,
+          "party_fingerprints.csv", row.names = FALSE)
+
+party_fingerprints %>%
   select(words, context_words, p_context, partyname) %>%
   spread(partyname, p_context) %>%
   arrange(desc(pmax(AfD, ChrDem, Greens, Left, Liberals, SocDem, na.rm = TRUE) -
                  pmin(AfD, ChrDem, Greens, Left, Liberals, SocDem, na.rm = TRUE))) -> fingerprints_wide
 
-write.csv(fingerprints_wide,
-          "party_fingerprints.csv", row.names = FALSE)
+
 
 source("js.R")
 fingerprints_wide %>%
