@@ -28,15 +28,16 @@ party_differences <- read_csv("party_differences.csv")
   #head(n = 200) -> party_differences
 ```
 
-## Slide
+## Idea
+
+## Results
 
 ```{r}
 shinyApp(ui = shinyUI(fluidPage(
-  fluidRow(column(width = 3, dataTableOutput("top_words")),
-           column(width = 9,
-                  sankeyNetworkOutput("plot"),
-                  h2("Associations"),
-                  dataTableOutput("associations")))
+  fluidRow(column(width = 4, wellPanel(style = "overflow-y:scroll; overflow-x:hidden; max-height: 600px", dataTableOutput("top_words"))),
+           column(width = 8,
+                  wellPanel(style = "overflow-y:hidden; max-height: 600px",
+                            sankeyNetworkOutput("plot"))))
 )),
          server = shinyServer(function(input, output, session) {
            
@@ -58,13 +59,14 @@ shinyApp(ui = shinyUI(fluidPage(
            top_words <- reactive(party_fingerprints %>%
              filter(words == selected_word()) %>%
              group_by(partyname) %>%
-             top_n(n = 4, wt = p_context) %>%
+             mutate(context_characteristic = p_context*entropy(p_context)) %>%
+             top_n(n = 4, wt = context_characteristic) %>%
              mutate(n = row_number()) %>%
              top_n(n = 4, wt = n) %>%
              ungroup() %>%
              select(partyname,
                     context_word = context_words,
-                    conditional_probability = p_context))
+                    conditional_probability = context_characteristic))
            
            output$associations <- renderDataTable(top_words())
            
