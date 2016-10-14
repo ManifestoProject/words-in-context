@@ -15,6 +15,7 @@ library(dplyr)
 library(readr)
 library(DT)
 library(ggplot2)
+library(networkD3)
 
 source("js.R")
 party_fingerprints <- read_csv("party_fingerprints.csv")
@@ -31,10 +32,9 @@ party_differences <- read_csv("party_differences.csv")
 
 ```{r}
 shinyApp(ui = shinyUI(fluidPage(
-  fluidRow(column(width = 4, dataTableOutput("top_words")),
-           column(width = 8,
-                  textOutput("test"),
-                  plotOutput("plot"),
+  fluidRow(column(width = 3, dataTableOutput("top_words")),
+           column(width = 9,
+                  sankeyNetworkOutput("plot"),
                   h2("Associations"),
                   dataTableOutput("associations")))
 )),
@@ -44,15 +44,16 @@ shinyApp(ui = shinyUI(fluidPage(
                                                                            word = words),
                                                                            # distinctiveness = round(js_all, digits = 3)),
                                                                  selection = "single",
-                                                                 options = list(lengthMenu = 1000)))
+                                                                 autoHideNavigation = TRUE,
+                                                                 options = list(lengthChange = FALSE,
+                                                                                searching = FALSE,
+                                                                                pageLength = 1000)))
 
            selected_word <- reactive(input$top_words_rows_selected %>%
                                        last() %>%
                                        { party_differences[., "words"] } %>%
                                        unlist())
            
-           output$test <- renderText(selected_word())
-
            
            top_words <- reactive(party_fingerprints %>%
              filter(words == selected_word()) %>%
@@ -67,11 +68,40 @@ shinyApp(ui = shinyUI(fluidPage(
            
            output$associations <- renderDataTable(top_words())
            
-           output$plot <- renderPlot(ggplot(top_words(),
-                                            aes(x = context_word, y = conditional_probability, fill = partyname)) + 
-                                       geom_bar(stat = "identity") + 
-                                       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-                                       scale_fill_manual(values = c("Greens" = "green", "AfD" = "blue", "Left" = "#ff66bb", "SocDem" = "red", "ChrDem" = "black", "Liberals" = "yellow")))
+           output$plot <- renderSankeyNetwork({
+             Nodes <- top_words() %>%
+                        select(partyname, context_word) %>%
+                        unlist() %>%
+                        unique() %>%
+                        { data_frame(name = .) } %>%
+                        mutate(ID = row_number() - 1) %>%
+                        left_join(c("Greens" = "green",
+                                    "AfD" = "blue",
+                                    "Left" = "#ff66bb",
+                                    "SocDem" = "red",
+                                    "ChrDem" = "black",
+                                    "Liberals" = "yellow") %>%
+                                    data_frame(color = ., name = names(.))) %>%
+                        mutate(color = ifelse(is.na(color), "#666666", color))
+             NodeList <- as.list(Nodes$ID) %>% set_names(Nodes$name)
+             sankeyNetwork(Links = top_words() %>%
+                             mutate(partyname = unlist(NodeList[partyname]),
+                                    context_word = unlist(NodeList[context_word])),
+                           Nodes = Nodes,
+                           NodeID = "name",
+                           NodeGroup = "color",
+                           Source = "partyname",
+                           colourScale = JS("String"), ## bloody hack
+                           Target = "context_word",
+                           Value = "conditional_probability",
+                           fontSize = 20, nodeWidth = 30, fontFamily = "sans-serif")
+             })
+           
+           # output$plot <- renderPlot(ggplot(top_words(),
+           #                                  aes(x = context_word, y = conditional_probability, fill = partyname)) + 
+           #                             geom_bar(stat = "identity") + 
+           #                             theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+           #                             scale_fill_manual(values = c("Greens" = "green", "AfD" = "blue", "Left" = "#ff66bb", "SocDem" = "red", "ChrDem" = "black", "Liberals" = "yellow")))
          }))
 ```
 
