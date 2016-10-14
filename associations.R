@@ -60,8 +60,8 @@ context_fingerprint <- function(text = "",
   
 }
 
-text_fingerprint <- function(text) {
-  multi_associations(text) %>%
+text_fingerprint <- function(text, ...) {
+  multi_associations(text, ...) %>%
     filter(str_length(words) > 2 & str_length(context_words) > 2 & !grepl("_", words) & !grepl("_", context_words)) %>%
     { context_fingerprint(associations = .) } %>%
     filter(!is.na(context_characteristic) & p_total > 0.000001) %>%

@@ -1,3 +1,5 @@
+library(magrittr)
+
 # Kullback-Leibler Divergence
 
 kld <- function(x,y) {

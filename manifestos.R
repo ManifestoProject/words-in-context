@@ -54,7 +54,7 @@ data_frame(party = parties,
   arrange(desc(pmax(AfD, ChrDem, Greens, Left, Liberals, SocDem, na.rm = TRUE) -
                  pmin(AfD, ChrDem, Greens, Left, Liberals, SocDem, na.rm = TRUE))) -> fingerprints_wide
 
-write.csv(fingerpints_wide,
+write.csv(fingerprints_wide,
           "party_fingerprints.csv", row.names = FALSE)
 
 source("js.R")
