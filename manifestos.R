@@ -8,7 +8,7 @@ library(parallel)
 library(tidyr)
 library(tm)
 library(manifestoR)
-mp_setapikey("../manifesto_apikey.txt")
+mp_setapikey("manifesto_apikey.txt")
 
 NCORES = 32
 
@@ -33,9 +33,9 @@ parties %>%
       lapply(. %>%
                stemDocument(language = "german") %>%
                removePunctuation() %>%
-               removeWords(stopwords("de")) %>%
+               (content_transformer(tolower))() %>%
+               removeWords(c(stopwords("de"), readLines("additional_stopwords.txt"))) %>%
                content() %>%
-               tolower() %>%
                { gsub("\\s+", " ", .) } %>%
                paste(collapse = " ")) %>%
       unlist()
@@ -43,6 +43,23 @@ parties %>%
   set_names(parties)-> raw_texts
 
 raw_texts %>%
-  mclapply(text_fingerprint, mc.cores = 8) -> party_fingerprints
+  mclapply(text_fingerprint, mc.cores = 8) %>%
+  bind_rows(.id = "party") -> party_fingerprints
 
-bind_rows(party_fingerprints, .id = "party") -> party_fingerprints
+data_frame(party = parties,
+           partyname = c("Greens", "Left", "SocDem", "Liberals", "ChrDem", "AfD")) %>%
+  right_join(party_fingerprints) %>%
+  select(words, context_words, p_context, partyname) %>%
+  spread(partyname, p_context) %>%
+  arrange(desc(pmax(AfD, ChrDem, Greens, Left, Liberals, SocDem, na.rm = TRUE) -
+                 pmin(AfD, ChrDem, Greens, Left, Liberals, SocDem, na.rm = TRUE))) -> fingerprints_wide
+
+write.csv(fingerpints_wide,
+          "party_fingerprints.csv", row.names = FALSE)
+
+source("js.R")
+fingerprints_wide %>%
+  group_by(words) %>%
+  summarise(js_all = multi_js(list(AfD, ChrDem, Greens, Left, Liberals, SocDem))) %>%
+  ungroup() %>%
+  arrange(desc(js_all)) -> party_differences

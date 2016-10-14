@@ -8,6 +8,22 @@ kld <- function(x,y) {
   }
 }
 
+entropy <- function(x) {
+  if (all(is.na(x))) {
+    return(NA)
+  } else {
+    -sum(x*log2(x), na.rm = TRUE)      
+  }
+}
+
+max_entropy <- function(n) {
+  -n*(1/n * log2(1/n))
+}
+
+rel_entropy <- function(x) {
+  entropy(x)/max_entropy(length(x))
+}
+
 sqd <- function(x, y) {
   sqrt(sum((ifelse(is.na(x), 0.0, x) - ifelse(is.na(y), 0.0, y))^2))
 }
@@ -24,18 +40,27 @@ js <- function(x,y) {
   0.5*(kld(x,m)+kld(y,m))
 }
 
-multi_js <- function(l, fun = kld, ...) {
+multi_js <- function(l, lambda = 10, ...) {
   
-  l <- subset(l, !unlist(lapply(l, . %>% is.na() %>% all())))
-  
-  m <- l %>%
+  l <- l %>%
+    subset(unlist(lapply(l, . %>% is.na() %>% not() %>% sum())) > 1) %>%
+    lapply(. %>%
+             { ifelse(is.na(.), lambda/length(.), . + lambda/length(.)) } %>%
+             divide_by(1 + lambda/length(.)))
+
+  h <- l %>%
     as.data.frame() %>%
     rowSums(na.rm = TRUE) %>%
-    divide_by(length(l))
+    divide_by(length(l)) %>%
+    rel_entropy()
+  
   l %>%
-    lapply(fun, m, ...) %>%
+    lapply(rel_entropy) %>%
     unlist() %>%
     sum() %>%
-    divide_by(length(l))
+    divide_by(length(l)) %>%
+    { h - . }
+  
 }
+
 
