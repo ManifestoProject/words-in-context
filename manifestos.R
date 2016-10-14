@@ -65,3 +65,5 @@ fingerprints_wide %>%
   summarise(js_all = multi_js(list(AfD, ChrDem, Greens, Left, Liberals, SocDem))) %>%
   ungroup() %>%
   arrange(desc(js_all)) -> party_differences
+
+write.csv(party_differences, "party_differences.csv", row.names = FALSE)
