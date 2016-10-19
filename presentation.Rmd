@@ -16,10 +16,18 @@ library(readr)
 library(DT)
 library(ggplot2)
 library(networkD3)
+library(quanteda)
+library(manifestoR)
+mp_setapikey("manifesto_apikey.txt")
+
 
 source("js.R")
 party_fingerprints <- read_csv("party_fingerprints.csv")
 party_differences <- read_csv("party_differences.csv")
+
+mp_corpus(countryname == "Germany" & date > 200000 & party != 41952) %>%
+  tm_map(function(doc) { meta(doc, "party") <- substr(meta(doc, "party"), 1, 4); doc }) -> corp
+
 #%>%
   #group_by(words) %>%
   #summarise(js_all = multi_js(list(AfD, ChrDem, Greens, Left, Liberals, SocDem))) %>%
@@ -38,7 +46,16 @@ party_differences <- read_csv("party_differences.csv")
 
 ## Example
 
-(keyword in context list) TODO
+```{r}
+inputPanel(textInput("keyword", label = "Keyword", value = "wettbewerb"))
+renderTable(
+  corp %>%
+    quanteda::corpus() %>%
+    kwic(keywords = input$keyword) %>%
+    select(contextPre, keyword, contextPost) %>%
+    head(n = 4)
+)
+```
 
 ## Data & Method
 
