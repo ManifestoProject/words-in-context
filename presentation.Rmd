@@ -53,7 +53,14 @@ How to identify words with distinctive context?
 
 ## Results
 
-- word list with Jensen Shannon numbers TODO
+```{r}
+DT::renderDataTable(DT::datatable(transmute(party_differences,
+   word = words,
+   distinctiveness = round(js_all, digits = 3)),
+ selection = "none",
+ autoHideNavigation = TRUE,
+ options = list(pageLength = 8)))
+```
 
 ## Results
 
@@ -134,7 +141,7 @@ shinyApp(ui = shinyUI(fluidPage(
 
 ## Challenges
 
->- Stopwords in political texts (TODO examples)
+>- Stopwords in political texts (wir, fordern, ...)
 >- class imbalance: differing amount of text per party
 >- class imbalance: differing frequency of **focus** words
 >- different levels of sensitivity in the "tails" of the conditional distribution
