@@ -11,7 +11,7 @@ runtime: shiny
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{r message=FALSE}
+```{r message=FALSE, results='hide'}
 library(dplyr)
 library(readr)
 library(DT)
@@ -76,7 +76,6 @@ DT::renderDataTable(DT::datatable(transmute(party_differences,
    word = words,
    distinctiveness = round(js_all, digits = 3)),
  selection = "none",
- autoHideNavigation = TRUE,
  options = list(pageLength = 8)))
 ```
 
@@ -84,7 +83,7 @@ DT::renderDataTable(DT::datatable(transmute(party_differences,
 
 ```{r}
 shinyApp(ui = shinyUI(fluidPage(
-  fluidRow(column(width = 4, wellPanel(style = "overflow-y:scroll; overflow-x:hidden; max-height: 600px", dataTableOutput("top_words"))),
+  fluidRow(column(width = 4, wellPanel(style = "overflow-y:scroll; overflow-x:hidden; max-height: 600px", uiOutput("word_selector"))),
            column(width = 8,
                   wellPanel(style = "overflow-y:hidden; max-height: 600px",
                             sankeyNetworkOutput("plot"))))
@@ -95,15 +94,16 @@ shinyApp(ui = shinyUI(fluidPage(
                                                                            word = words),
                                                                            # distinctiveness = round(js_all, digits = 3)),
                                                                  selection = "single",
-                                                                 autoHideNavigation = TRUE,
                                                                  options = list(lengthChange = FALSE,
                                                                                 searching = FALSE,
                                                                                 pageLength = 1000)))
 
-           selected_word <- reactive(tryCatch({input$top_words_rows_selected %>%
-                                       last() %>%
-                                       { party_differences[., "words"] } %>%
-                                       unlist()}, error = function(e) { stop("No word selected")}))
+           output$word_selector <- renderUI(selectInput("selected_word", label = "select word", choices = party_differences %>% select(words) %>% set_names(NULL) %>% unlist(), selectize = FALSE, multiple = FALSE, size = 20))
+           selected_word <- reactive(input$selected_word)
+           # selected_word <- reactive(tryCatch({input$top_words_rows_selected %>%
+           #                             last() %>%
+           #                             { party_differences[., "words"] } %>%
+           #                             unlist()}, error = function(e) { stop("No word selected")}))
            
            
            top_words <- reactive(party_fingerprints %>%
