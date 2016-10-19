@@ -1,5 +1,6 @@
 ---
 title: "Contextual word usage of political parties"
+subtitle: PyData Political Bias Hackathon
 author: "Jirka Lewandowski <jirka.lewandowski@wzb.eu>"
 date: "Oct 19 2016"
 output: ioslides_presentation
@@ -66,7 +67,7 @@ Texts:
 
 How to identify words with distinctive context?
 
-- Jensen Shannon divergence of conditional distribution
+- Jensen Shannon divergence of conditional/context distribution
 
 ## Results
 
@@ -99,10 +100,10 @@ shinyApp(ui = shinyUI(fluidPage(
                                                                                 searching = FALSE,
                                                                                 pageLength = 1000)))
 
-           selected_word <- reactive(input$top_words_rows_selected %>%
+           selected_word <- reactive(tryCatch({input$top_words_rows_selected %>%
                                        last() %>%
                                        { party_differences[., "words"] } %>%
-                                       unlist())
+                                       unlist()}, error = function(e) { stop("No word selected")}))
            
            
            top_words <- reactive(party_fingerprints %>%
@@ -164,6 +165,7 @@ shinyApp(ui = shinyUI(fluidPage(
 >- different levels of sensitivity in the "tails" of the conditional distribution
 >- -> smoothing, tweaking
 >- interpretation
+>- amount of text
 
 ## Resources
 
@@ -171,5 +173,5 @@ Code: https://github.com/ManifestoProject/words-in-context
 
 Data: https://manifesto-project.wzb.eu
 
-Twitter: [@poiofint](https://twitter.com/poiofint)
+Twitter: [&#64;poiofint](https://twitter.com/poiofint)
 
