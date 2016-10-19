@@ -1,7 +1,7 @@
 ---
-title: "Untitled"
+title: "Contextual word usage of political parties"
 author: "Jirka Lewandowski <jirka.lewandowski@wzb.eu>"
-date: "14 10 2016"
+date: "Oct 19 2016"
 output: ioslides_presentation
 runtime: shiny
 ---
@@ -29,6 +29,31 @@ party_differences <- read_csv("party_differences.csv")
 ```
 
 ## Idea
+
+>- Word usage of political parties: term frequency per party
+>- Saliency theory: position = what you talk about = emphasis/space per topic
+>- **Contextual** word usage ...: term frequency **near a focus word** (per party)
+>- Different positions of **how** parties talk about the same topic
+>- How to identify words with distinctive context?
+
+## Example
+
+(keyword in context list) TODO
+
+## Data & Method
+
+Texts:
+
+- Party Manifestos from the Manifesto Project
+- Facebook posts
+
+How to identify words with distinctive context?
+
+- Jensen Shannon divergence of conditional distribution
+
+## Results
+
+- word list with Jensen Shannon numbers TODO
 
 ## Results
 
@@ -106,4 +131,21 @@ shinyApp(ui = shinyUI(fluidPage(
            #                             scale_fill_manual(values = c("Greens" = "green", "AfD" = "blue", "Left" = "#ff66bb", "SocDem" = "red", "ChrDem" = "black", "Liberals" = "yellow")))
          }))
 ```
+
+## Challenges
+
+>- Stopwords in political texts (TODO examples)
+>- class imbalance: differing amount of text per party
+>- class imbalance: differing frequency of **focus** words
+>- different levels of sensitivity in the "tails" of the conditional distribution
+>- -> smoothing, tweaking
+>- interpretation
+
+## Resources
+
+Code: https://github.com/ManifestoProject/words-in-context
+
+Data: https://manifesto-project.wzb.eu
+
+Twitter: [@poiofint](https://twitter.com/poiofint)
 
