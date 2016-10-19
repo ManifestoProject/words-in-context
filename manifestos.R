@@ -34,7 +34,7 @@ parties %>%
                stemDocument(language = "german") %>%
                removePunctuation() %>%
                (content_transformer(tolower))() %>%
-               removeWords(c(stopwords("de"), readLines("additional_stopwords.txt"))) %>%
+               removeWords(c(tm::stopwords("de"), readLines("additional_stopwords.txt"))) %>%
                content() %>%
                { gsub("\\s+", " ", .) } %>%
                paste(collapse = " ")) %>%
